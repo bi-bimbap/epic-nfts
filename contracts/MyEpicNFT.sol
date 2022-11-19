@@ -13,14 +13,14 @@ contract MyEpicNFT is ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    // This is our SVG code. All we need to change is the word that's displayed. Everything else stays the same.
-    // So, we make a baseSvg variable here that all our NFTs can use.
+    // SVG code - make a baseSvg var here that can be reused 
+    // only the words will change, everything else is the same
     string baseSvg = "<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: white; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='black' /><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>";
 
-    // create three arrays, each with their own theme of random words.
-    string[] firstWords = ["Fantastic", "Epic", "Terrible", "Crazy", "Wild", "Terrifying", "Spooky"];
+    // three arrays, each with their own theme of random words.
+    string[] firstWords  = ["Fantastic", "Epic", "Terrible", "Crazy", "Wild", "Terrifying", "Spooky"];
     string[] secondWords = ["Cupcake", "Pizza", "Milkshake", "Curry", "Chicken", "Sandwich", "Salad"];
-    string[] thirdWords = ["Naruto", "Sasuke", "Sakura", "Goku", "Gaara", "Minato", "Kakshi", "Madara"];
+    string[] thirdWords  = ["Naruto", "Sasuke", "Sakura", "Goku", "Gaara", "Minato", "Kakshi", "Madara"];
     
     // ERC721 constructor requires passing name of NFT & symbol
     constructor() ERC721 ("SquareNFT", "Square") {
@@ -28,14 +28,15 @@ contract MyEpicNFT is ERC721URIStorage {
     }
 
     function random(string memory input) internal pure returns (uint256) {
+        // input for kecchak236 needs to be encoded into bytes
         return uint256(keccak256(abi.encodePacked(input)));
     }
 
     // randomly pick a word from each array
     function pickRandomFirstWord(uint256 tokenId) public view returns (string memory) {
-        // I seed the random generator. More on this in the lesson. 
+        // create source of randomness by concat 2 strings
         uint256 rand = random(string(abi.encodePacked("FIRST_WORD", Strings.toString(tokenId))));
-        // Squash the # between 0 and the length of the array to avoid going out of bounds.
+        // squash the # between 0 & length of array to avoid going out of bounds
         rand = rand % firstWords.length;
         return firstWords[rand];
     }
@@ -56,25 +57,26 @@ contract MyEpicNFT is ERC721URIStorage {
     function makeAnEpicNFT() public {
         // get current tokenId, starts at 0
         uint256 newItemId = _tokenIds.current();
-        // We go and randomly grab one word from each of the three arrays.
+        // randomly get 1 word from each arrays
         string memory first  = pickRandomFirstWord(newItemId);
         string memory second = pickRandomSecondWord(newItemId);
         string memory third  = pickRandomThirdWord(newItemId);
         string memory combinedWord = string(abi.encodePacked(first, second, third));
 
-        // concatenate 3 words together, close the <text> and <svg> tags.
+        // concatenate all 3 words, close <text> & <svg> tags
         string memory finalSvg = string(abi.encodePacked(baseSvg, combinedWord, "</text></svg>"));
 
-        // get all the JSON metadata in place and base64 encode it.
+        // get JSON metadata in place & base64 encode it
         string memory json = Base64.encode(
             bytes(
                 string(
                     abi.encodePacked(
                         '{"name": "',
-                        // We set the title of our NFT as the generated word.
+                        // set title of NFT as the generated word
                         combinedWord,
                         '", "description": "A highly acclaimed collection of squares.", "image": "data:image/svg+xml;base64,',
-                        // We add data:image/svg+xml;base64 and then append our base64 encode our svg.
+                        // add "data:image/svg+xml;base64", then append base64 encoded svg
+                        // "data:image/svg+xml;base64" = process this base64 encoded data as a SVG
                         Base64.encode(bytes(finalSvg)),
                         '"}'
                     )
@@ -82,17 +84,25 @@ contract MyEpicNFT is ERC721URIStorage {
             )
         );
         
-        // console.log("\n--------------------");
-        // console.log(finalSvg);
-        // console.log("--------------------\n");
+        console.log("\n--------------------");
+        console.log(finalSvg);
+        console.log("--------------------\n");
 
-        // Just like before, we prepend data:application/json;base64, to our data.
+        // prepend "data:application/json;base64" to our data
         string memory finalTokenUri = string(
             abi.encodePacked("data:application/json;base64,", json)
         );
 
+        // preview image & JSON content
         console.log("\n--------------------");
-        console.log(finalTokenUri);
+        console.log(
+            string(
+                abi.encodePacked(
+                    "https://nftpreview.0xdev.codes/?code=",
+                    finalTokenUri
+                )
+            )
+        );
         console.log("--------------------\n");
 
         // mint NFT to sender 
