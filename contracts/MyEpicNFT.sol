@@ -13,14 +13,18 @@ contract MyEpicNFT is ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    // SVG code - make a baseSvg var here that can be reused 
-    // only the words will change, everything else is the same
-    string baseSvg = "<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: white; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='black' /><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>";
-
+    // SVG code - make a base SVG var here that can be reused 
+    // only the words & background colour will change, everything else is the same
+    string svgPartOne = "<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: white; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='";
+    string svgPartTwo = "'/><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>";
+    
     // three arrays, each with their own theme of random words.
     string[] firstWords  = ["Fantastic", "Epic", "Terrible", "Crazy", "Wild", "Terrifying", "Spooky"];
     string[] secondWords = ["Cupcake", "Pizza", "Milkshake", "Curry", "Chicken", "Sandwich", "Salad"];
     string[] thirdWords  = ["Naruto", "Sasuke", "Sakura", "Goku", "Gaara", "Minato", "Kakshi", "Madara"];
+
+    // SVG background colours
+    string[] colors = ["red", "#08C2A8", "black", "yellow", "blue", "green"];
 
     event NewEpicNFTMinted(address sender, uint256 tokenId);
     
@@ -55,6 +59,12 @@ contract MyEpicNFT is ERC721URIStorage {
         return thirdWords[rand];
     }
 
+    function pickRandomColor(uint256 tokenId) public view returns (string memory) {
+        uint256 rand = random(string(abi.encodePacked("COLOR", Strings.toString(tokenId))));
+        rand = rand % colors.length;
+        return colors[rand];
+    }
+
     // users will hit this func to get their NFT
     function makeAnEpicNFT() public {
         // get current tokenId, starts at 0
@@ -64,9 +74,9 @@ contract MyEpicNFT is ERC721URIStorage {
         string memory second = pickRandomSecondWord(newItemId);
         string memory third  = pickRandomThirdWord(newItemId);
         string memory combinedWord = string(abi.encodePacked(first, second, third));
-
-        // concatenate all 3 words, close <text> & <svg> tags
-        string memory finalSvg = string(abi.encodePacked(baseSvg, combinedWord, "</text></svg>"));
+        string memory randomColor = pickRandomColor(newItemId);
+        // concatenate all 3 words, background color, close <text> & <svg> tags
+        string memory finalSvg = string(abi.encodePacked(svgPartOne, randomColor, svgPartTwo, combinedWord, "</text></svg>"));
 
         // get JSON metadata in place & base64 encode it
         string memory json = Base64.encode(
@@ -118,6 +128,10 @@ contract MyEpicNFT is ERC721URIStorage {
 
         emit NewEpicNFTMinted(msg.sender, newItemId);
     }
+
+    // function getTotalNFTsMintedSoFar() public returns (uint256) {
+
+    // }
 
     // set NFT's metadata
     // OpenSea will call the func automatically to fetch the data and display it automatically

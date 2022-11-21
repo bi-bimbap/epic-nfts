@@ -9,5 +9,8 @@ module.exports = {
       url: process.env.STAGING_QUICKNODE_KEY,
       accounts: [process.env.PRIVATE_KEY]
     }
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_KEY
   }
 };
